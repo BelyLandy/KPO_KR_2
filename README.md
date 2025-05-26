@@ -57,9 +57,6 @@ docker compose down -v
 | № | Возможность             | Описание                                                                           |
 | - | ----------------------- | ---------------------------------------------------------------------------------- |
 | 1 | **Приём отчёта**        | `POST /files` — принимает `.txt`, сохраняет и возвращает `id` + признак дубликата. |
-
-![image](https://github.com/user-attachments/assets/dd5c68d8-7efb-490f-8175-91f14a6c4d91)
-
 | 2 | **Статистика**          | `GET /analysis/{id}` — абзацы, слова, символы.`words` ≠ 0 проверено тестами.       |
 | 3 | **100 % плагиат**       | SHA‑256 дубликация: повторная загрузка ⇒ тот же `id`, `is_duplicate=true`.         |
 | 4 | **Word Cloud** *(доп.)* | PNG генерируется локально (библиотека *wordcloud*) и доступен `/wordcloud/{key}`.  |
@@ -94,8 +91,20 @@ docker-network
 | Метод                        | Описание                                         |
 | ---------------------------- | ------------------------------------------------ |
 | **POST**  `/files`           | загрузить файл, получить `{id, is_duplicate, …}` |
+
+![image](https://github.com/user-attachments/assets/368be796-fea0-44ab-94cf-7353eadc7423)
+![image](https://github.com/user-attachments/assets/062574ee-661b-444b-8cda-a6a78f841b45)
+
 | **GET**   `/files/{id}`      | скачать исходный файл                            |
+
+![image](https://github.com/user-attachments/assets/825ce20e-52da-43c7-be9b-52110bd1dd79)
+![image](https://github.com/user-attachments/assets/6c24bc7d-7a20-4c1c-aa48-7398591ab450)
+
 | **POST**  `/analysis/{id}`   | инициировать анализ                              |
+
+![image](https://github.com/user-attachments/assets/01033655-ce87-4dbf-babe-2111e6234f7d)
+
+
 | **GET**   `/analysis/{id}`   | получить статус/результат                        |
 | **GET**   `/wordcloud/{key}` | получить PNG-изображение                         |
 
