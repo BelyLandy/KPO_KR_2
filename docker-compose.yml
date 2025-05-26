@@ -1,0 +1,116 @@
+# docker-compose.yml  ── версия 2025-05-26
+# Подымает Postgres, MinIO, Redis + 3 микросервиса и RQ-воркер
+
+services:
+  # ---------- DATA STORES ----------
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: storing
+      POSTGRES_PASSWORD: storing
+      POSTGRES_DB: storing
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "storing"]
+      interval: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest          # ← стабильный тег
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"   # S3-endpoint
+      - "9001:9001"   # web-консоль
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  # ---------- MICRO-SERVICES ----------
+  storing-service:
+    build: ./storing
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://storing:storing@postgres:5432/storing
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    ports:
+      - "8000:8000"   # Swagger storing (не обязателен)
+
+  analysis-service:
+    build: ./analysis
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://storing:storing@postgres:5432/storing
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: analysis
+      REDIS_URL: redis://redis:6379/0
+      STORING_URL: http://storing-service:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+    ports:
+      - "8002:8000"
+
+  analysis-worker:
+    build: ./analysis
+    command: rq worker analysis
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://storing:storing@postgres:5432/storing
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_BUCKET: analysis
+      REDIS_URL: redis://redis:6379/0
+      STORING_URL: http://storing-service:8000
+    depends_on:
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+  gateway:
+    build: ./gateway
+    restart: unless-stopped
+    environment:
+      STORING_URL: http://storing-service:8000
+      ANALYSIS_URL: http://analysis-service:8000
+    depends_on:
+      storing-service:
+        condition: service_started
+      analysis-service:
+        condition: service_started
+    ports:
+      - "8001:8000"   # ← основной вход (Swagger gateway)
+
+# ---------- named volumes ----------
+volumes:
+  postgres-data:
+  minio-data:

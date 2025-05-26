@@ -1,0 +1,7 @@
+fastapi==0.110.2
+uvicorn[standard]==0.29.0
+sqlalchemy[asyncio]==2.0.29
+asyncpg==0.29.0
+aiofiles==23.2.1
+python-multipart==0.0.9
+minio==7.2.5
