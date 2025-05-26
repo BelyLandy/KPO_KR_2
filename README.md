@@ -103,11 +103,11 @@ docs/
  └─ openapi-analysis.json
 ```
 
-Импортируйте в Postman «Raw text» или откройте в Swagger‑Editor.
+Можно импортировать в Postman «Raw text» или откройте в Swagger‑Editor.
 
 ---
 
-## 5. Запуск автоматических тестов
+## Запуск автоматических тестов
 
 ```bash
 # поднимет docker-stack, выполнит pytest, соберёт покрытие
