@@ -2,82 +2,132 @@
 
 ## Работу выполнил **Девятов Денис Сергеевич, группа БПИ-238**
 
+## Документация.
+
 ---
 
 ## Инструкция запуска.
 
-Находясь в корне проекта, выполните в терминале:
+В корне проекта, выполните в терминале:
 
 ```
-docker compose up --build
+```bash
+# установка зависимостей для разработки
+python -m pip install -r requirements.txt -r requirements-dev.txt
+
+# сборка и запуск стека
+docker compose up --build -d
+
+# остановка и удаление томов
+docker compose down -v
 ```
 
-После старта контейнеров можно открыть Postman и проверить работу сервисов.
+После старта контейнеров можно открыть Swagger на 8001 и проверить работу решения.
+
+| URL                                                      | Сервис                  | Swagger |
+| -------------------------------------------------------- | ----------------------- | ------- |
+| [http://localhost:8001/docs](http://localhost:8001/docs) | Gateway (основной вход) | ✅      |
+| [http://localhost:8000/docs](http://localhost:8000/docs) | Storing                 | ✅      |
+| [http://localhost:8002/docs](http://localhost:8002/docs) | Analysis                | ✅      |
+
+### Предварительные требования для пазвёртывания.
+
+| ПО             | Версия                                |
+| -------------- | ------------------------------------- |
+| Docker Engine  | ≥ 24.0                                |
+| Docker Compose | v2                                    |
+| Python         | ≥ 3.10 (только для разработки/тестов) |
 
 ---
 
-## 1. Соответствие ключевым критериям
+## Назначение системы.
 
-* **Функциональность (2 б.)**
+Серверное приложение предназначено для автоматизированной обработки *.txt*-отчётов:
 
-  * **FileStoringService**: приём файлов `.txt`, дедупликация через SHA-256 (антиплагиат 100 %), отдача файла по стриму
-  * **FileAnalysisService**: вычисление числа абзацев, слов и символов; по желанию — генерация облака слов
-
-* **Микросервисная архитектура (4 б.)**
-
-  * Два автономных микросервиса: FileStoringService и FileAnalysisService
-  * Единая точка входа через Nginx API Gateway
-  * Отдельные базы PostgreSQL на портах 5432 и 5433
-  * Обработка ошибок: 404, 409, 422, 503, 500
-
-* **Swagger / Postman (1 б.)**
-
-  * Автодокументация Swagger UI на `/docs` для каждого сервиса
-  * Коллекция Postman в папке `postman/`
-
-* **Качество кода и документации (2 б.)**
-
-  * Чистое разделение на слои (Domain, Use Cases, Infrastructure, Presentation)
-  * Подробные README в каждом сервисе и этот общий отчёт в Markdown
-
-* **Тестирование и покрытие ≥ 65 % (1 б.)**
-
-  * Unit-тесты для бизнес-логики
-  * Общий процент покрытия \~ 85 % в каждом сервисе
+| № | Возможность             | Описание                                                                           |
+| - | ----------------------- | ---------------------------------------------------------------------------------- |
+| 1 | **Приём отчёта**        | `POST /files` — принимает `.txt`, сохраняет и возвращает `id` + признак дубликата. |
+| 2 | **Статистика**          | `GET /analysis/{id}` — абзацы, слова, символы.`words` ≠ 0 проверено тестами.       |
+| 3 | **100 % плагиат**       | SHA‑256 дубликация: повторная загрузка ⇒ тот же `id`, `is_duplicate=true`.         |
+| 4 | **Word Cloud** *(доп.)* | PNG генерируется локально (библиотека *wordcloud*) и доступен `/wordcloud/{key}`.  |
 
 ---
 
-## 2. Роль API Gateway (Nginx)
+## Архитектура.
 
-API Gateway на базе Nginx распределяет запросы между микросервисами:
-
-```nginx
-http {
-    upstream file_storing_service {
-        server file_storing_service:8000;
-    }
-    upstream file_analisys_service {
-        server file_analisys_service:8001;
-    }
-
-    server {
-        listen 80;
-        
-        location /file_storing_service/ {
-            proxy_pass http://file_storing_service/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
-        
-        location /file_analisys_service/ {
-            proxy_pass http://file_analisys_service/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
-    }
-}
-
-events {}
 ```
+┌─────────┐    TXT     ┌────────────────┐   HTTP   ┌────────────────┐
+│ Client  │ ────────► │ API Gateway     │────────► │ Storing Service │
+└─────────┘           │ (FastAPI 8001)  │          │ (FastAPI 8000) │
+        ▲             │ • routing       │◄──────── │  MinIO S3       │
+        │             └────────────────┘           └────────────────┘
+        │                        │                            ▲
+        │  JSON                  │ Redis RQ queue            │ S3
+        │                        ▼                            │
+        │             ┌────────────────┐           PNG        │
+        └─────────────│ Analysis Svc   │──────────────────────┘
+                      │ (FastAPI 8002) │
+                      │ • stats        │
+                      │ • word‑cloud   │
+                      └────────────────┘
+```
+
+```
+docker-network
+│
+├─ gateway (0.0.0.0:8001)          – маршрутизация REST-запросов
+│
+├─ storing-service (8000)          – S3-хранение + Postgres-метаданные
+│      └─ MinIO  (9000/9001)       – S3-совместимое хранилище
+│
+├─ analysis-service (8002)         – статистика, генерация word-cloud
+│      └─ Redis (6379) + RQ-worker – очередь фоновых задач
+│
+└─ Postgres (5432)                 – единая БД метаданных
+```
+
+Каждый сервис — изолированный Docker-контейнер, конфигурируется через переменные окружения и взаимодействует только по HTTP внутри выделенной сети `docker-compose`.
+*Ошибка любого сервиса* ловится Gateway’ем и конвертируется в `HTTP 5xx/4xx`.
+
+---
+
+## Справочник API (через Gateway :8001)
+
+| Метод                        | URI                                              | Описание |
+| ---------------------------- | ------------------------------------------------ | -------- |
+| **POST**  `/files`           | загрузить файл, получить `{id, is_duplicate, …}` |          |
+| **GET**   `/files/{id}`      | скачать исходный файл                            |          |
+| **POST**  `/analysis/{id}`   | инициировать анализ                              |          |
+| **GET**   `/analysis/{id}`   | получить статус/результат                        |          |
+| **GET**   `/wordcloud/{key}` | получить PNG-изображение                         |          |
+
+Полные спецификации OpenAPI 3.1.0 расположены в каталоге **`docs/`**:
+
+```
+docs/
+ ├─ openapi-gateway.json
+ ├─ openapi-storing.json
+ └─ openapi-analysis.json
+```
+
+Импортируйте в Postman «Raw text» или откройте в Swagger‑Editor.
+
+---
+
+## 5. Запуск автоматических тестов
+
+```bash
+# поднимет docker-stack, выполнит pytest, соберёт покрытие
+pytest              # параметры задаются в pytest.ini
+```
+
+Покрытие по `coverage.py` ≥ **65 %**.
+
+---
+
+## Код-стайл и качество
+
+* Инструменты проверки: **ruff format + ruff check**.
+* Асинхронный доступ к I/O, отсутствуют блокирующие вызовы в event-loop.
+* Разделение слоёв: маршрутизация, бизнес-логика, хранилище.
+
