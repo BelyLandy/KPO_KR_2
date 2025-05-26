@@ -11,7 +11,7 @@
 В корне проекта, выполните в терминале:
 
 ```
-```bash
+
 # установка зависимостей для разработки
 python -m pip install -r requirements.txt -r requirements-dev.txt
 
@@ -20,6 +20,7 @@ docker compose up --build -d
 
 # остановка и удаление томов
 docker compose down -v
+
 ```
 
 После запуска контейнеров можно открыть Swagger на 8001 и проверить работу решения.
@@ -63,20 +64,8 @@ docker compose down -v
 ## Архитектура системы.
 
 ```
-┌─────────┐    TXT     ┌────────────────┐   HTTP   ┌────────────────┐
-│ Client  │ ────────► │ API Gateway     │────────► │ Storing Service │
-└─────────┘           │ (FastAPI 8001)  │          │ (FastAPI 8000) │
-        ▲             │ • routing       │◄──────── │  MinIO S3       │
-        │             └────────────────┘           └────────────────┘
-        │                        │                            ▲
-        │  JSON                  │ Redis RQ queue            │ S3
-        │                        ▼                            │
-        │             ┌────────────────┐           PNG        │
-        └─────────────│ Analysis Svc   │──────────────────────┘
-                      │ (FastAPI 8002) │
-                      │ • stats        │
-                      │ • word‑cloud   │
-                      └────────────────┘
+![image](https://github.com/user-attachments/assets/345b576c-618c-4bf7-a0c1-7318db816a31)
+
 ```
 
 ```
