@@ -63,10 +63,7 @@ docker compose down -v
 
 ## Архитектура системы.
 
-```
 ![image](https://github.com/user-attachments/assets/345b576c-618c-4bf7-a0c1-7318db816a31)
-
-```
 
 ```
 docker-network
