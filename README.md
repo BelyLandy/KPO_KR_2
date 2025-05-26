@@ -11,7 +11,6 @@
 В корне проекта, выполните в терминале:
 
 ```
-
 # установка зависимостей для разработки
 python -m pip install -r requirements.txt -r requirements-dev.txt
 
@@ -20,7 +19,6 @@ docker compose up --build -d
 
 # остановка и удаление томов
 docker compose down -v
-
 ```
 
 После запуска контейнеров можно открыть Swagger на 8001 и проверить работу решения.
