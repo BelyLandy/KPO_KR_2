@@ -136,6 +136,9 @@ pytest              # Параметры задаются в pytest.ini.
 
 Покрытие по `coverage.py` ≥ **65 %**.
 
+![image](https://github.com/user-attachments/assets/a5b9fa4a-0df3-44cf-95dd-3eb7f79ecf7d)
+![image](https://github.com/user-attachments/assets/1fb03980-8d7c-4012-bce7-fcea64bbdb11)
+
 ---
 
 ## Код-стайл и качество
