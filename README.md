@@ -103,10 +103,16 @@ docker-network
 | **POST**  `/analysis/{id}`   | инициировать анализ                              |
 
 ![image](https://github.com/user-attachments/assets/01033655-ce87-4dbf-babe-2111e6234f7d)
-
+![image](https://github.com/user-attachments/assets/f3ab33c1-6b86-4ff3-9cea-0b8dc75d99d7)
 
 | **GET**   `/analysis/{id}`   | получить статус/результат                        |
+
+![image](https://github.com/user-attachments/assets/bdf4b713-7131-4a13-b0ae-47ea40dbeaeb)
+![image](https://github.com/user-attachments/assets/1d7a622e-7bbe-4549-a0ed-1c43d7982497)
+
 | **GET**   `/wordcloud/{key}` | получить PNG-изображение                         |
+
+![image](https://github.com/user-attachments/assets/d12161dd-6ec3-4329-b158-032c02f6e77b)
 
 Полные спецификации OpenAPI 3.1.0 расположены в каталоге **`docs/`**:
 
