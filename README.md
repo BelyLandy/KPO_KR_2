@@ -11,15 +11,19 @@
 В корне проекта, выполните в терминале:
 
 ```
-# установка зависимостей для разработки
+# Установка зависимостей для разработки.
 python -m pip install -r requirements.txt -r requirements-dev.txt
 
-# сборка и запуск стека
+# Сборка и запуск стека.
 docker compose up --build -d
 
-# остановка и удаление томов
+# Остановка и удаление томов.
 docker compose down -v
 ```
+![image](https://github.com/user-attachments/assets/6174c39e-4a01-4c3d-9757-fc4bec8aca76)
+![image](https://github.com/user-attachments/assets/7386a0fa-a586-4bfa-8cc8-0508209f9f1a)
+![image](https://github.com/user-attachments/assets/316d6627-e87b-49f9-b281-4b5ba2ac8453)
+
 
 После запуска контейнеров можно открыть Swagger на 8001 и проверить работу решения.
 
