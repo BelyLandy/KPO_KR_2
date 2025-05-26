@@ -2,7 +2,7 @@
 
 ## Работу выполнил **Девятов Денис Сергеевич, группа БПИ-238**
 
-## Документация.
+## Документация к разработанной системе антиплагиата.
 
 ---
 
@@ -22,15 +22,22 @@ docker compose up --build -d
 docker compose down -v
 ```
 
-После старта контейнеров можно открыть Swagger на 8001 и проверить работу решения.
+После запуска контейнеров можно открыть Swagger на 8001 и проверить работу решения.
 
-| URL                                                      | Сервис                  | Swagger |
-| -------------------------------------------------------- | ----------------------- | ------- |
-| [http://localhost:8001/docs](http://localhost:8001/docs) | Gateway (основной вход) | ✅      |
-| [http://localhost:8000/docs](http://localhost:8000/docs) | Storing                 | ✅      |
-| [http://localhost:8002/docs](http://localhost:8002/docs) | Analysis                | ✅      |
+| URL                                                      | Сервис                        |
+| -------------------------------------------------------- | ----------------------------- |
+| [http://localhost:8001/docs](http://localhost:8001/docs) | API Gateway (основной вход)   |
+| [http://localhost:8000/docs](http://localhost:8000/docs) | File Storing Service          |
+| [http://localhost:8002/docs](http://localhost:8002/docs) | File Analysis Service         |
 
-### Предварительные требования для пазвёртывания.
+![image](https://github.com/user-attachments/assets/f1e649af-d18b-4d90-bf03-a7a7bbf6fe79)
+
+![image](https://github.com/user-attachments/assets/ba3a71cb-5a0e-476d-86c9-a2a2f9304aff)
+
+![image](https://github.com/user-attachments/assets/417d568b-70a1-4de3-8461-adcd8989e3b9)
+
+
+### Предварительные требования для развёртывания.
 
 | ПО             | Версия                                |
 | -------------- | ------------------------------------- |
@@ -53,7 +60,7 @@ docker compose down -v
 
 ---
 
-## Архитектура.
+## Архитектура системы.
 
 ```
 ┌─────────┐    TXT     ┌────────────────┐   HTTP   ┌────────────────┐
